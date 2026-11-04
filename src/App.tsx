@@ -14,6 +14,9 @@ import { RSVPSection } from './components/RSVPSection';
 import { FloatingNav } from './components/FloatingNav';
 import { MusicControl } from './components/MusicControl';
 import { FloatingPetals } from './components/FloatingPetals';
+import { readGuestFromUrl } from './guest';
+
+const guestName = readGuestFromUrl();
 
 export default function App() {
   const [showInvitation, setShowInvitation] = useState(false);
@@ -57,6 +60,7 @@ export default function App() {
       <EnvelopeOpening
         onComplete={() => setShowInvitation(true)}
         onMusicStart={handleMusicStart}
+        guestName={guestName}
       />
     );
   }
@@ -71,13 +75,13 @@ export default function App() {
 
       <main className="relative z-10 flex flex-col items-center w-full max-w-[1400px] mx-auto">
         <Hero />
-        <OurBeginning />
+        <OurBeginning guestName={guestName} />
         <OurMoments />
         <TheDate />
         <CelebrationDetails />
         <Venue />
 
-        <RSVPSection />
+        <RSVPSection guestName={guestName} />
       </main>
 
       {/* Subtle Invite Mint Branding */}

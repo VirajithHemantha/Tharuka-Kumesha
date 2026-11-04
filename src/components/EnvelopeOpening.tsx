@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from 'motion/react';
 
-export function EnvelopeOpening({ onComplete, onMusicStart }: { onComplete: () => void, onMusicStart?: () => void }) {
+export function EnvelopeOpening({ onComplete, onMusicStart, guestName }: { onComplete: () => void, onMusicStart?: () => void, guestName?: string }) {
   const [isOpening, setIsOpening] = useState(false);
 
   const handleStart = () => {
@@ -37,6 +37,17 @@ export function EnvelopeOpening({ onComplete, onMusicStart }: { onComplete: () =
             >
               You are welcome
             </motion.h1>
+
+            {guestName && (
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 1, delay: 0.8 }}
+                className="-mt-8 mb-12 px-6 text-center font-serif italic text-brand-ivory text-2xl sm:text-3xl drop-shadow-md"
+              >
+                Dear {guestName}
+              </motion.p>
+            )}
 
             <motion.div
               initial={{ opacity: 0 }}

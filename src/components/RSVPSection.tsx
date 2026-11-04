@@ -1,17 +1,38 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 
-export const RSVPSection: React.FC = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [status, setStatus] = useState<'idle' | 'success'>('idle');
+// Google Apps Script Web App (writes RSVPs to the wedding Google Sheet).
+const GOOGLE_SCRIPT_URL =
+  'https://script.google.com/macros/s/AKfycbwG3cDUuM-91QvYJ134wacU8nlaCeMbHigDbAf8oNbQ96Q2xvkusl01fPUwV-dCg3nq/exec';
 
-  const handleSubmit = (e: React.FormEvent) => {
+const emptyForm = { name: '', guests: '', attendance: '', message: '' };
+
+export const RSVPSection: React.FC<{ guestName?: string }> = ({ guestName = '' }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+  const [form, setForm] = useState({ ...emptyForm, name: guestName });
+
+  const update = (field: keyof typeof emptyForm) =>
+    (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) =>
+      setForm(prev => ({ ...prev, [field]: e.target.value }));
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus('success');
-    setTimeout(() => {
-      setIsOpen(false);
-      setStatus('idle');
-    }, 3000);
+    setStatus('sending');
+    try {
+      const body = new URLSearchParams({ sheet: 'RSVP', ...form });
+      // no-cors: Apps Script doesn't send CORS headers; the row is still written.
+      await fetch(GOOGLE_SCRIPT_URL, { method: 'POST', mode: 'no-cors', body });
+      setStatus('success');
+      setForm({ ...emptyForm, name: guestName });
+      setTimeout(() => {
+        setIsOpen(false);
+        setStatus('idle');
+      }, 3000);
+    } catch (err) {
+      console.error(err);
+      setStatus('error');
+    }
   };
 
   return (
@@ -78,21 +99,32 @@ export const RSVPSection: React.FC = () => {
                   </h3>
                   
                   <form onSubmit={handleSubmit} className="space-y-6 text-left">
-                    <div>
-                      <input 
-                        type="text" 
-                        required 
-                        placeholder="Guest Name"
-                        className="w-full bg-transparent border-b border-brand-champagne/50 py-3 font-serif text-lg text-brand-dark placeholder:text-brand-sage-deep focus:outline-none focus:border-brand-sage-deep transition-colors rounded-none"
-                      />
-                    </div>
+                    {guestName ? (
+                      <div className="text-center border-b border-brand-champagne/50 pb-5">
+                        <p className="font-sans text-brand-sage-deep text-[10px] uppercase tracking-[0.25em] mb-2">Responding as</p>
+                        <p className="font-serif italic text-brand-dark text-2xl">{guestName}</p>
+                      </div>
+                    ) : (
+                      <div>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Guest Name"
+                          value={form.name}
+                          onChange={update('name')}
+                          className="w-full bg-transparent border-b border-brand-champagne/50 py-3 font-serif text-lg text-brand-dark placeholder:text-brand-sage-deep focus:outline-none focus:border-brand-sage-deep transition-colors rounded-none"
+                        />
+                      </div>
+                    )}
                     
                     <div>
                       <select 
                         required
+                        value={form.guests}
+                        onChange={update('guests')}
                         className="w-full bg-transparent border-b border-brand-champagne/50 py-3 font-serif text-lg text-brand-dark focus:outline-none focus:border-brand-sage-deep transition-colors rounded-none appearance-none"
                       >
-                        <option value="" disabled selected>Number of Guests</option>
+                        <option value="" disabled>Number of Guests</option>
                         <option value="1">1</option>
                         <option value="2">2</option>
                         <option value="3">3</option>
@@ -104,11 +136,11 @@ export const RSVPSection: React.FC = () => {
                       <p className="font-sans text-brand-sage-deep text-xs uppercase tracking-[0.1em] mb-3">Attendance</p>
                       <div className="flex gap-6">
                         <label className="flex items-center gap-2 font-serif text-brand-dark cursor-pointer">
-                          <input type="radio" name="attendance" value="accept" required className="accent-brand-sage-deep" />
+                          <input type="radio" name="attendance" value="Joyfully Accepts" checked={form.attendance === 'Joyfully Accepts'} onChange={update('attendance')} required className="accent-brand-sage-deep" />
                           Joyfully Accepts
                         </label>
                         <label className="flex items-center gap-2 font-serif text-brand-dark cursor-pointer">
-                          <input type="radio" name="attendance" value="decline" required className="accent-brand-sage-deep" />
+                          <input type="radio" name="attendance" value="Regretfully Declines" checked={form.attendance === 'Regretfully Declines'} onChange={update('attendance')} required className="accent-brand-sage-deep" />
                           Regretfully Declines
                         </label>
                       </div>
@@ -117,16 +149,25 @@ export const RSVPSection: React.FC = () => {
                     <div>
                       <textarea 
                         placeholder="Message (Optional)"
+                        value={form.message}
+                        onChange={update('message')}
                         rows={3}
                         className="w-full bg-transparent border-b border-brand-champagne/50 py-3 font-serif text-lg text-brand-dark placeholder:text-brand-sage-deep focus:outline-none focus:border-brand-sage-deep transition-colors rounded-none resize-none mt-4"
                       />
                     </div>
 
+                    {status === 'error' && (
+                      <p className="font-sans text-red-700 text-xs text-center">
+                        Something went wrong. Please check your connection and try again.
+                      </p>
+                    )}
+
                     <button 
                       type="submit"
-                      className="w-full mt-8 bg-brand-sage-deep text-brand-ivory font-sans uppercase tracking-[0.2em] text-[10px] sm:text-xs py-5 hover:bg-brand-champagne hover:text-brand-dark transition-colors duration-500"
+                      disabled={status === 'sending'}
+                      className="w-full mt-8 bg-brand-sage-deep text-brand-ivory font-sans uppercase tracking-[0.2em] text-[10px] sm:text-xs py-5 hover:bg-brand-champagne hover:text-brand-dark transition-colors duration-500 disabled:opacity-60 disabled:cursor-wait"
                     >
-                      CONFIRM RSVP
+                      {status === 'sending' ? 'SENDING…' : 'CONFIRM RSVP'}
                     </button>
                   </form>
                 </>
