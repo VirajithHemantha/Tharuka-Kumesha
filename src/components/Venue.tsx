@@ -11,11 +11,11 @@ export const Venue: React.FC = () => {
           whileInView={{ opacity: 1, scale: 1 }}
           viewport={{ once: true }}
           transition={{ duration: 1.5, ease: "easeOut" }}
-          className="w-full max-w-[340px] aspect-[232/332] overflow-hidden shadow-xl"
+          className="w-full max-w-[640px] aspect-[1199/1312] overflow-hidden shadow-xl"
         >
           <img
             src="/pre/hotel-venue.jpg"
-            alt="Grand Ballroom, Hotel Green Court" 
+            alt="Hotel Green Court, Homagama" 
             className="w-full h-full object-cover"
           />
         </motion.div>
