@@ -54,7 +54,7 @@ export const RSVPSection: React.FC<{ guestName?: string }> = ({ guestName = '' }
         </p>
 
         <span className="font-sans uppercase tracking-[0.2em] text-brand-sage-deep text-xs mb-12">
-          RSVP BY 30 NOVEMBER 2026
+          RSVP BY 20 NOVEMBER 2026
         </span>
 
         <button 
